@@ -11,3 +11,7 @@ Loki-rs is still in development and is **not ready for general use**.
 - [x] Support JSON API
 - [ ] Support Protobufs
 - [ ] Comprehensive unit tests
+
+## References
+
+- [Grafana Loki HTTP API Reference](https://grafana.com/docs/loki/latest/api/)
