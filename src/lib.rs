@@ -1,5 +1,12 @@
 mod push;
 
+use async_std::{
+    prelude::*,
+    task
+};
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
 /// The Loki client
 pub struct Loki {
     /// The URI at which the Loki server resides
@@ -12,8 +19,11 @@ impl Loki {
         Self { address }
     }
 
-    pub fn push_log(&self, stream_name: String, stream_value: String, log_messages: Vec<[String; 2]>) {
-        push::push_log(self.address.clone(), stream_name, stream_value, log_messages);
+    pub async fn push_log(&self, stream_name: String, stream_value: String, log_messages: Vec<[String; 2]>) -> Result<()> {
+        push::push_log(self.address.clone(), stream_name, stream_value, log_messages)
+            .await?;
+
+        Ok(())
     }
 }
 

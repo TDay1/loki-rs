@@ -3,8 +3,15 @@ use awc::Client;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
+use async_std::{
+    prelude::*,
+    task
+};
+
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
 /// push a log to Loki
-pub fn push_log(address: String, stream_name: String, stream_value: String, log_messages: Vec<[String; 2]> ) {
+pub async fn push_log(address: String, stream_name: String, stream_value: String, log_messages: Vec<[String; 2]> ) -> Result<()> {
 
     // Struct holds the messages for a given logstream
     #[derive(Serialize, Deserialize, Debug)]
@@ -42,9 +49,8 @@ pub fn push_log(address: String, stream_name: String, stream_value: String, log_
             .insert_header(("Content-Type", "application/json"))
             .send_body(json_stream)
             .await;
-
-        println!("Response: {:?}", res);
     });
+    Ok(())
 }
 
 
