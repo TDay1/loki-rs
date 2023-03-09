@@ -1,10 +1,11 @@
-use actix_rt::System;
-use awc::Client;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+use surf::post;
+
+//type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 /// push a log to Loki
-pub fn push_log(address: String, stream_name: String, stream_value: String, log_messages: Vec<[String; 2]> ) {
+pub async fn push_log(address: String, stream_name: String, stream_value: String, log_messages: Vec<[String; 2]> ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Struct holds the messages for a given logstream
     #[derive(Serialize, Deserialize, Debug)]
@@ -29,22 +30,18 @@ pub fn push_log(address: String, stream_name: String, stream_value: String, log_
         streams: vec![log_stream]
     };
 
-    // JSON encode log structures
-    let json_stream = serde_json::to_string(&stream_container)
-        .expect("");
+    // Send the log stream to Loki as JSON
+    let uri = format!("{}/loki/api/v1/push", address);
+    let res = post(uri).body_json(&stream_container)?.await?;
 
-    // Submit log
-    System::new().block_on(async {
-        let client = Client::default();
+    let success = res.status() as u8 /100 == 2;
 
-        let res = client
-            .post(address + "/loki/api/v1/push") 
-            .insert_header(("Content-Type", "application/json"))
-            .send_body(json_stream)
-            .await;
+    if !success {
+        return Err(format!("Failed to push log to Loki: {}", res.status()).into());
+    } else {
+        Ok(())
+    }
 
-        println!("Response: {:?}", res);
-    });
 }
 
 
